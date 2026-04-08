@@ -28,7 +28,9 @@ class TlaSpecObservation(Observation):
     feedback: str = Field(
         default="", description="Error messages or verification results"
     )
-    score: float = Field(default=0.0, description="Best score so far (0.0-1.0)")
+    score: float = Field(
+        default=0.01, description="Best score so far, strictly in (0, 1)"
+    )
     attempts_remaining: int = Field(default=0, description="Steps left in episode")
     available_tasks: Optional[List[str]] = Field(
         default=None, description="Task IDs available (shown on initial reset)"
@@ -39,5 +41,5 @@ class TlaSpecState(State):
     """Episode state tracking."""
 
     task_id: str = ""
-    current_score: float = 0.0
+    current_score: float = 0.01
     max_steps: int = 5

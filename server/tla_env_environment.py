@@ -22,9 +22,9 @@ except ImportError:
     from tla_env.models import TlaSpecAction, TlaSpecObservation, TlaSpecState
 
 try:
-    from server.tasks import TASKS, SCORE_MAX
+    from server.tasks import SCORE_MAX, SCORE_MIN, TASKS
 except ImportError:
-    from tla_env.server.tasks import TASKS, SCORE_MAX
+    from tla_env.server.tasks import SCORE_MAX, SCORE_MIN, TASKS
 
 
 class TlaEnvironment(Environment):
@@ -47,7 +47,7 @@ class TlaEnvironment(Environment):
     def __init__(self):
         self._state = TlaSpecState(episode_id=str(uuid4()), step_count=0)
         self._task = None
-        self._best_score = 0.0
+        self._best_score = SCORE_MIN
         self._last_spec = ""
         self._last_feedback = ""
 
@@ -76,7 +76,7 @@ class TlaEnvironment(Environment):
             )
 
         self._task = TASKS[task_id]
-        self._best_score = 0.0
+        self._best_score = SCORE_MIN
         self._last_spec = ""
         self._last_feedback = ""
 
@@ -84,7 +84,7 @@ class TlaEnvironment(Environment):
             episode_id=episode_id or str(uuid4()),
             step_count=0,
             task_id=task_id,
-            current_score=0.0,
+            current_score=SCORE_MIN,
             max_steps=self._task.max_steps,
         )
 
@@ -146,11 +146,15 @@ class TlaEnvironment(Environment):
 
         self._last_spec = spec_text
 
-        step_score, feedback = self._task.grader(spec_text, self._task)
+        try:
+            step_score, feedback = self._task.grader(spec_text, self._task)
+        except Exception as e:
+            step_score = SCORE_MIN
+            feedback = f"Grading error: {e}"
 
-        reward = 0.01
+        reward = SCORE_MIN
         if step_score > self._best_score:
-            reward = max(0.01, step_score - self._best_score)
+            reward = max(SCORE_MIN, step_score - self._best_score)
             self._best_score = step_score
 
         self._state.current_score = self._best_score
