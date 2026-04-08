@@ -27,6 +27,13 @@ TASKS = ["fix_syntax", "write_invariant", "write_spec"]
 MAX_STEPS_PER_TASK = {"fix_syntax": 5, "write_invariant": 5, "write_spec": 8}
 SUCCESS_THRESHOLD = 0.8
 
+
+def task_score_open_unit(raw: float) -> float:
+    """Map grader score from [0, 1] to (0, 1) for validators that reject 0.0 and 1.0."""
+    x = max(0.0, min(1.0, float(raw)))
+    return 0.01 + 0.98 * x
+
+
 SYSTEM_PROMPT = """You are an expert TLA+ specification writer.
 
 When given a task, you write or fix TLA+ specifications.
@@ -117,7 +124,7 @@ async def run_task(client: OpenAI, env_url: str, task_id: str) -> Dict:
 
     rewards: List[float] = []
     steps_taken = 0
-    score = 0.0
+    raw_score = 0.0
     success = False
 
     log_start(task=task_id, env=BENCHMARK, model=MODEL_NAME)
@@ -149,21 +156,26 @@ async def run_task(client: OpenAI, env_url: str, task_id: str) -> Dict:
                 steps_taken = step
 
                 feedback = obs.feedback
-                score = obs.score
+                raw_score = obs.score
 
                 log_step(step=step, action=spec_text, reward=reward, done=done, error=None)
 
                 if done:
                     break
 
-            success = score >= SUCCESS_THRESHOLD
+            success = raw_score >= SUCCESS_THRESHOLD
 
     except Exception as e:
         print(f"Task {task_id} error: {e}", file=sys.stderr, flush=True)
         log_step(step=steps_taken + 1, action="", reward=0.0, done=True, error=str(e))
 
     log_end(success=success, steps=steps_taken, rewards=rewards)
-    return {"task_id": task_id, "score": score, "steps": steps_taken, "success": success}
+    return {
+        "task_id": task_id,
+        "score": task_score_open_unit(raw_score),
+        "steps": steps_taken,
+        "success": success,
+    }
 
 
 async def main():
