@@ -22,9 +22,9 @@ except ImportError:
     from tla_env.models import TlaSpecAction, TlaSpecObservation, TlaSpecState
 
 try:
-    from server.tasks import TASKS
+    from server.tasks import TASKS, SCORE_MAX
 except ImportError:
-    from tla_env.server.tasks import TASKS
+    from tla_env.server.tasks import TASKS, SCORE_MAX
 
 
 class TlaEnvironment(Environment):
@@ -62,7 +62,7 @@ class TlaEnvironment(Environment):
         if task_id not in TASKS:
             return TlaSpecObservation(
                 done=True,
-                reward=0.0,
+                reward=0.01,
                 task_id="",
                 task_description=(
                     f"Unknown task '{task_id}'. "
@@ -70,7 +70,7 @@ class TlaEnvironment(Environment):
                 ),
                 current_spec="",
                 feedback=f"Valid task IDs: {', '.join(TASKS.keys())}",
-                score=0.0,
+                score=0.01,
                 attempts_remaining=0,
                 available_tasks=list(TASKS.keys()),
             )
@@ -90,7 +90,7 @@ class TlaEnvironment(Environment):
 
         return TlaSpecObservation(
             done=False,
-            reward=0.0,
+            reward=0.01,
             task_id=task_id,
             task_description=self._task.description,
             current_spec=self._task.starting_spec,
@@ -99,7 +99,7 @@ class TlaEnvironment(Environment):
                 f"You have {self._task.max_steps} attempts. "
                 "Submit your TLA+ specification."
             ),
-            score=0.0,
+            score=0.01,
             attempts_remaining=self._task.max_steps,
             available_tasks=list(TASKS.keys()),
         )
@@ -113,12 +113,12 @@ class TlaEnvironment(Environment):
         if self._task is None:
             return TlaSpecObservation(
                 done=True,
-                reward=0.0,
+                reward=0.01,
                 task_id="",
                 task_description="No task active. Call reset(task_id=...) first.",
                 current_spec="",
                 feedback="Call reset() before step().",
-                score=0.0,
+                score=0.01,
                 attempts_remaining=0,
             )
 
@@ -131,12 +131,12 @@ class TlaEnvironment(Environment):
             done = remaining <= 0
             return TlaSpecObservation(
                 done=done,
-                reward=-0.05,
+                reward=0.01,
                 task_id=self._task.task_id,
                 task_description=self._task.description,
                 current_spec=self._task.starting_spec,
                 feedback=(
-                    "Identical submission (penalty -0.05). "
+                    "Identical submission. "
                     "Modify your specification.\n\n"
                     f"Previous feedback:\n{self._last_feedback}"
                 ),
@@ -148,17 +148,17 @@ class TlaEnvironment(Environment):
 
         step_score, feedback = self._task.grader(spec_text, self._task)
 
-        reward = 0.0
+        reward = 0.01
         if step_score > self._best_score:
-            reward = step_score - self._best_score
+            reward = max(0.01, step_score - self._best_score)
             self._best_score = step_score
 
         self._state.current_score = self._best_score
         self._last_feedback = feedback
 
-        done = self._best_score >= 1.0 or remaining <= 0
-        if done and self._best_score >= 1.0:
-            feedback += "\n\nPerfect score achieved!"
+        done = self._best_score >= SCORE_MAX or remaining <= 0
+        if done and self._best_score >= SCORE_MAX:
+            feedback += "\n\nTop score achieved!"
 
         return TlaSpecObservation(
             done=done,

@@ -11,7 +11,7 @@ from typing import Dict, List, Optional
 
 from openai import OpenAI
 
-sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tla_env import TlaEnv, TlaSpecAction
 
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")

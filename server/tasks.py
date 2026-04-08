@@ -21,6 +21,14 @@ except ImportError:
 
 SPECS_DIR = Path(__file__).parent / "specs"
 
+SCORE_MIN = 0.01
+SCORE_MAX = 0.99
+
+
+def _clamp(score: float) -> float:
+    """Clamp score to open interval (0, 1) as required by contest validator."""
+    return max(SCORE_MIN, min(SCORE_MAX, score))
+
 
 @dataclass
 class TaskDef:
@@ -74,7 +82,7 @@ def _grade_task1(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
 
     module_name = _extract_module_name(spec_text)
     if not module_name:
-        return 0.0, "No MODULE declaration found. TLA+ specs must start with ---- MODULE name ----"
+        return _clamp(0.0), "No MODULE declaration found. TLA+ specs must start with ---- MODULE name ----"
 
     sany = run_sany(spec_text, module_name)
     if not sany.success:
@@ -93,7 +101,7 @@ def _grade_task1(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
             if relevant:
                 feedback_parts.append("Raw parser output (relevant lines):")
                 feedback_parts.extend(f"  {l}" for l in relevant)
-        return score, "\n".join(feedback_parts)
+        return _clamp(score), "\n".join(feedback_parts)
 
     score = 0.4
     feedback_parts.append("Syntax check PASSED (SANY OK).")
@@ -109,7 +117,7 @@ def _grade_task1(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
 
     tlc = run_tlc(spec_text, task.tlc_cfg, module_name)
     if tlc.success:
-        score = 1.0
+        score = 0.99
         feedback_parts.append(
             f"TLC model check PASSED. {tlc.states_found} states explored, "
             f"{tlc.distinct_states} distinct. MutualExclusion holds."
@@ -128,7 +136,7 @@ def _grade_task1(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
         for e in tlc.errors[:3]:
             feedback_parts.append(f"  - {e}")
 
-    return min(score, 1.0), "\n".join(feedback_parts)
+    return _clamp(score), "\n".join(feedback_parts)
 
 
 # ---------------------------------------------------------------------------
@@ -162,7 +170,7 @@ def _grade_task2(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
 
     module_name = _extract_module_name(spec_text)
     if not module_name:
-        return 0.0, "No MODULE declaration found."
+        return _clamp(0.0), "No MODULE declaration found."
 
     inv_match = re.search(
         r"MutualExclusion\s*==\s*(.+?)(?:\n\n|\nSpec|\n----|\n====|\Z)",
@@ -170,18 +178,18 @@ def _grade_task2(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
         re.DOTALL,
     )
     if not inv_match:
-        return 0.05, "No MutualExclusion definition found in the spec."
+        return _clamp(0.05), "No MutualExclusion definition found in the spec."
 
     inv_body = inv_match.group(1).strip()
     if inv_body in TRIVIAL_INVARIANTS:
-        return 0.05, "MutualExclusion is still set to TRUE (the placeholder). Write a real invariant."
+        return _clamp(0.05), "MutualExclusion is still set to TRUE (the placeholder). Write a real invariant."
 
     sany = run_sany(spec_text, module_name)
     if not sany.success:
         feedback_parts.append("SANY parse errors:")
         for e in sany.errors[:5]:
             feedback_parts.append(f"  - {e}")
-        return 0.15, "\n".join(feedback_parts)
+        return _clamp(0.15), "\n".join(feedback_parts)
 
     score = 0.3
     feedback_parts.append("Syntax check PASSED.")
@@ -197,7 +205,7 @@ def _grade_task2(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
 
     tlc = run_tlc(spec_text, task.tlc_cfg, module_name)
     if tlc.success:
-        score = 1.0
+        score = 0.99
         feedback_parts.append(
             f"TLC model check PASSED with N=3. {tlc.states_found} states, "
             f"{tlc.distinct_states} distinct. MutualExclusion invariant verified!"
@@ -215,7 +223,7 @@ def _grade_task2(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
         for e in tlc.errors[:3]:
             feedback_parts.append(f"  - {e}")
 
-    return min(score, 1.0), "\n".join(feedback_parts)
+    return _clamp(score), "\n".join(feedback_parts)
 
 
 # ---------------------------------------------------------------------------
@@ -269,7 +277,7 @@ def _grade_task3(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
 
     module_name = _extract_module_name(spec_text)
     if not module_name:
-        return 0.0, "No MODULE declaration found. Start with: ---- MODULE two_phase_commit ----"
+        return _clamp(0.0), "No MODULE declaration found. Start with: ---- MODULE two_phase_commit ----"
 
     sany = run_sany(spec_text, module_name)
     if not sany.success:
@@ -283,7 +291,7 @@ def _grade_task3(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
             f"Components found: {', '.join(present)} "
             f"({len(present)}/{len(TASK3_REQUIRED_COMPONENTS)})"
         )
-        return score, "\n".join(feedback_parts)
+        return _clamp(score), "\n".join(feedback_parts)
 
     score = 0.15
     feedback_parts.append("Syntax check PASSED.")
@@ -308,14 +316,14 @@ def _grade_task3(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
             "ConsistencyInvariant is missing or trivial. "
             "It should state: no RM committed while another aborted."
         )
-        return min(score, 0.3), "\n".join(feedback_parts)
+        return _clamp(min(score, 0.3)), "\n".join(feedback_parts)
 
     score += 0.1
     feedback_parts.append("ConsistencyInvariant defined (non-trivial).")
 
     tlc = run_tlc(spec_text, task.tlc_cfg, module_name)
     if tlc.success:
-        score = 1.0
+        score = 0.99
         feedback_parts.append(
             f"TLC model check PASSED! {tlc.states_found} states, "
             f"{tlc.distinct_states} distinct. ConsistencyInvariant verified!"
@@ -334,7 +342,7 @@ def _grade_task3(spec_text: str, task: "TaskDef") -> Tuple[float, str]:
         for e in tlc.errors[:5]:
             feedback_parts.append(f"  - {e}")
 
-    return min(score, 1.0), "\n".join(feedback_parts)
+    return _clamp(score), "\n".join(feedback_parts)
 
 
 # ---------------------------------------------------------------------------
