@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openenv-tla-env"
+version = "0.1.0"
+description = "TLA+ Specification Verification Environment for OpenEnv"
+requires-python = ">=3.10"
+dependencies = [
+    "openenv-core[core]>=0.2.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.scripts]
+server = "tla_env.server.app:main"
+
+[tool.setuptools]
+include-package-data = true
+packages = ["tla_env", "tla_env.server"]
+package-dir = { "tla_env" = ".", "tla_env.server" = "server" }
+
+[tool.setuptools.package-data]
+"tla_env.server" = ["specs/*.tla", "specs/*.cfg"]
