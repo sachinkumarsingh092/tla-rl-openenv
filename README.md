@@ -114,8 +114,6 @@ pip install openenv-core
 # Clone and install
 pip install -e tla_env/
 
-# Run locally
-cd tla_env && uvicorn server.app:app --host 0.0.0.0 --port 8000
 
 # Or with Docker
 docker build -t tla-env -f tla_env/Dockerfile tla_env/
@@ -133,14 +131,11 @@ export ENV_URL=https://sachinkumarsingh-tla-env.hf.space
 python inference.py
 ```
 
-### Baseline Performance (Qwen2.5-Coder-32B-Instruct)
-
-| Task | Difficulty | Score | Steps |
-|------|------------|-------|-------|
-| `fix_syntax` | Easy | 1.00 | 2 |
-| `write_invariant` | Medium | 1.00 | 2 |
-| `write_spec` | Hard | 0.40 | 8 |
-| **Average** | | **0.80** | |
+| Model | fix_syntax | write_invariant | write_spec | Mean |
+|-------|------------|-----------------|------------|------|
+| Qwen2.5-Coder-32B-Instruct | 0.98 | 0.98 | 0.06 | 0.67 |
+| Qwen2.5-Coder-7B-Instruct | 0.98 | 0.16 | 0.06 | 0.40 |
+| Llama-3.1-8B-Instruct | 0.60 | 0.16 | 0.16 | 0.31 |
 
 ## Deploy to Hugging Face Spaces
 
