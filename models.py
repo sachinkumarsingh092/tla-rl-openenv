@@ -29,7 +29,8 @@ class TlaSpecObservation(Observation):
         default="", description="Error messages or verification results"
     )
     score: float = Field(
-        default=0.01, description="Best score so far, strictly in (0, 1)"
+        default=0.01,
+        description="Best score so far; must stay strictly inside (0, 1) for benchmarks",
     )
     attempts_remaining: int = Field(default=0, description="Steps left in episode")
     available_tasks: Optional[List[str]] = Field(

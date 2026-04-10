@@ -22,9 +22,9 @@ except ImportError:
     from tla_env.models import TlaSpecAction, TlaSpecObservation, TlaSpecState
 
 try:
-    from server.tasks import SCORE_MAX, SCORE_MIN, TASKS
+    from server.tasks import TASKS, SCORE_MAX, SCORE_MIN, _clamp
 except ImportError:
-    from tla_env.server.tasks import SCORE_MAX, SCORE_MIN, TASKS
+    from tla_env.server.tasks import TASKS, SCORE_MAX, SCORE_MIN, _clamp
 
 
 class TlaEnvironment(Environment):
@@ -47,7 +47,7 @@ class TlaEnvironment(Environment):
     def __init__(self):
         self._state = TlaSpecState(episode_id=str(uuid4()), step_count=0)
         self._task = None
-        self._best_score = SCORE_MIN
+        self._best_score = 0.0
         self._last_spec = ""
         self._last_feedback = ""
 
@@ -140,21 +140,17 @@ class TlaEnvironment(Environment):
                     "Modify your specification.\n\n"
                     f"Previous feedback:\n{self._last_feedback}"
                 ),
-                score=self._best_score,
+                score=_clamp(self._best_score),
                 attempts_remaining=max(0, remaining),
             )
 
         self._last_spec = spec_text
 
-        try:
-            step_score, feedback = self._task.grader(spec_text, self._task)
-        except Exception as e:
-            step_score = SCORE_MIN
-            feedback = f"Grading error: {e}"
+        step_score, feedback = self._task.grader(spec_text, self._task)
 
-        reward = SCORE_MIN
+        reward = 0.01
         if step_score > self._best_score:
-            reward = max(SCORE_MIN, step_score - self._best_score)
+            reward = max(0.01, step_score - self._best_score)
             self._best_score = step_score
 
         self._state.current_score = self._best_score
@@ -171,7 +167,7 @@ class TlaEnvironment(Environment):
             task_description=self._task.description,
             current_spec=self._task.starting_spec,
             feedback=feedback,
-            score=self._best_score,
+            score=_clamp(self._best_score),
             attempts_remaining=max(0, remaining),
         )
 

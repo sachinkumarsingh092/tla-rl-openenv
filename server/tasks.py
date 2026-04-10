@@ -9,6 +9,7 @@ Each task has:
 - grader function returning (score, feedback)
 """
 
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,7 +28,9 @@ SCORE_MAX = 0.99
 
 def _clamp(score: float) -> float:
     """Clamp score to open interval (0, 1) as required by contest validator."""
-    return max(SCORE_MIN, min(SCORE_MAX, score))
+    if not math.isfinite(score):
+        return SCORE_MIN
+    return max(SCORE_MIN, min(SCORE_MAX, float(score)))
 
 
 @dataclass
@@ -391,3 +394,4 @@ def _load_tasks() -> Dict[str, TaskDef]:
 
 
 TASKS: Dict[str, TaskDef] = _load_tasks()
+s

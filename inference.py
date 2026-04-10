@@ -5,6 +5,7 @@ Runs an LLM agent against all 3 tasks and produces structured logs.
 """
 
 import asyncio
+import math
 import os
 import sys
 from typing import Dict, List, Optional
@@ -30,6 +31,8 @@ SUCCESS_THRESHOLD = 0.8
 
 def task_score_open_unit(raw: float) -> float:
     """Map grader score from [0, 1] to (0, 1) for validators that reject 0.0 and 1.0."""
+    if not math.isfinite(float(raw)):
+        return 0.01
     x = max(0.0, min(1.0, float(raw)))
     return 0.01 + 0.98 * x
 
@@ -136,6 +139,7 @@ async def run_task(client: OpenAI, env_url: str, task_id: str) -> Dict:
             task_desc = obs.task_description
             current_spec = obs.current_spec
             feedback = obs.feedback
+            raw_score = obs.score
 
             for step in range(1, max_steps + 1):
                 if result.done:
