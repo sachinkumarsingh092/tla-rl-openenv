@@ -76,11 +76,17 @@ def log_step(step: int, action: str, reward: float, done: bool, error: Optional[
     )
 
 
-def log_end(success: bool, steps: int, rewards: List[float]):
+def _clamp_score(s: float) -> float:
+    """Ensure score is strictly in (0, 1) for platform validation."""
+    return max(0.01, min(0.99, s))
+
+
+def log_end(success: bool, steps: int, score: float, rewards: List[float]):
     success_str = "true" if success else "false"
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
     print(
-        f"[END] success={success_str} steps={steps} rewards={rewards_str}",
+        f"[END] success={success_str} steps={steps} "
+        f"score={score:.2f} rewards={rewards_str}",
         flush=True,
     )
 
@@ -173,10 +179,11 @@ async def run_task(client: OpenAI, env_url: str, task_id: str) -> Dict:
         print(f"Task {task_id} error: {e}", file=sys.stderr, flush=True)
         log_step(step=steps_taken + 1, action="", reward=0.0, done=True, error=str(e))
 
-    log_end(success=success, steps=steps_taken, rewards=rewards)
+    final_score = _clamp_score(task_score_open_unit(raw_score))
+    log_end(success=success, steps=steps_taken, score=final_score, rewards=rewards)
     return {
         "task_id": task_id,
-        "score": task_score_open_unit(raw_score),
+        "score": final_score,
         "steps": steps_taken,
         "success": success,
     }
