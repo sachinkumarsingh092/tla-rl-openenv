@@ -34,7 +34,7 @@ def task_score_open_unit(raw: float) -> float:
     if not math.isfinite(float(raw)):
         return 0.01
     x = max(0.0, min(1.0, float(raw)))
-    return 0.01 + 0.98 * x
+    return 0.01 * x
 
 
 SYSTEM_PROMPT = """You are an expert TLA+ specification writer.
