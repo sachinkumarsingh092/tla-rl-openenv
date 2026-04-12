@@ -14,7 +14,7 @@ tags:
 # TLA+ Specification Verification Environment
 
 A real-world OpenEnv environment where AI agents learn to write, fix, and
-complete [TLA+](https://lamport.azurewebsites.net/tla/tla.html) formal
+complete [TLA+](https://en.wikipedia.org/wiki/TLA+) formal
 specifications for distributed systems. Specifications are verified using
 **SANY** (syntax analysis) and **TLC** (model checking).
 
@@ -108,15 +108,17 @@ async with TlaEnv(base_url="https://sachinkumarsingh-tla-env.hf.space") as env:
 ## Setup
 
 ```bash
+uv sync
+
 # Install dependencies
-pip install openenv-core
+uv pip install -r tla_env/requirements.txt
 
 # Clone and install
-pip install -e tla_env/
+uv pip install -e tla_env/
 
 
 # Or with Docker
-docker build -t tla-env -f tla_env/Dockerfile tla_env/
+docker build -t tla-env -f Dockerfile .
 docker run -p 8000:8000 tla-env
 ```
 
@@ -128,7 +130,7 @@ export API_BASE_URL=https://router.huggingface.co/v1
 export MODEL_NAME="Qwen/Qwen2.5-Coder-32B-Instruct"
 export ENV_URL=https://sachinkumarsingh-tla-env.hf.space
 
-python inference.py
+python3 inference.py
 ```
 
 | Model | fix_syntax | write_invariant | write_spec | Mean |
