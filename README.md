@@ -24,8 +24,7 @@ TLA+ is used at Amazon, Microsoft, and Intel to formally verify distributed
 systems and protocols. Writing correct TLA+ specifications requires substantial
 expertise, creating a bottleneck in formal verification adoption. While large language models have shown promise in automating proofs for tactic-based theorem provers like Lean, applying these approaches directly to TLA+ faces significant challenges due to the hierarchical proof structure of the TLA+ proof system. This
 environment provides a training ground for AI agents to learn specification
-writing, bridging toward automated proof generation
-([Zhou & Tripakis, 2025](https://arxiv.org/abs/2512.09758)).
+writing, bridging toward automated proof generation.
 
 ## Tasks
 
@@ -153,3 +152,8 @@ openenv push --repo-id sachinkumarsingh/tla-env
 - **OpenEnv**: RL environment framework (step/reset/state API)
 - **FastAPI**: HTTP + WebSocket server
 - **Docker**: Containerized deployment with JRE + tla2tools.jar
+
+## Reference
+
+1. ([Towards Language Model Guided TLA+ Proof Automation](https://arxiv.org/abs/2512.09758))
+2. ([DeepSeek-Prover-V2: Advancing Formal Mathematical Reasoning via Reinforcement Learning for Subgoal Decomposition](https://github.com/deepseek-ai/DeepSeek-Prover-V2))
