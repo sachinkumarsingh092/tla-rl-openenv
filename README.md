@@ -155,5 +155,5 @@ openenv push --repo-id sachinkumarsingh/tla-env
 
 ## Reference
 
-1. ([Towards Language Model Guided TLA+ Proof Automation](https://arxiv.org/abs/2512.09758))
-2. ([DeepSeek-Prover-V2: Advancing Formal Mathematical Reasoning via Reinforcement Learning for Subgoal Decomposition](https://github.com/deepseek-ai/DeepSeek-Prover-V2))
+1. [Towards Language Model Guided TLA+ Proof Automation](https://arxiv.org/abs/2512.09758)
+2. [DeepSeek-Prover-V2](https://github.com/deepseek-ai/DeepSeek-Prover-V2)
